@@ -1,0 +1,47 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '2.10.0'  # You can change this to the version you need
+
+    - name: Get Dependencies
+      run: flutter pub get
+
+    - name: Build APK
+      run: flutter build apk
+
+    - name: Build iOS
+      if: runner.os == 'macOS'
+      run: flutter build ios
+
+    - name: Create Releases Directory
+      run: mkdir -p releases
+
+    - name: Copy APK to Releases
+      run: cp build/app/outputs/flutter-apk/app-release.apk releases/
+
+    - name: Copy iOS to Releases
+      if: runner.os == 'macOS'
+      run: cp -R build/ios/Runner/*.app releases/
+
+    - name: Archive artifacts
+      if: success()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: releases/
